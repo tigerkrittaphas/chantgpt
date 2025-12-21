@@ -1,0 +1,25 @@
+[project]
+name = "chantgpt"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "datasets>=4.4.1",
+    "fastparquet>=2024.11.0",
+    "faiss-cpu>=1.8.0",
+    "fastapi>=0.115.5",
+    "google-cloud-aiplatform>=1.128.0",
+    "google-cloud-translate>=3.16.0",
+    "huggingface-hub>=1.2.3",
+    "ipykernel>=7.1.0",
+    "pandas>=2.3.3",
+    "pyarrow>=22.0.0",
+    "rapidfuzz>=3.9.7",
+    "python-dotenv>=1.2.1",
+    "uvicorn>=0.34.0",
+    "vertexai>=1.43.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "src/pali",
+]
