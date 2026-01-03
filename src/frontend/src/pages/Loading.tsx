@@ -2,6 +2,56 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChant } from '@/context/ChantContext';
 import LotusIcon from '@/components/LotusIcon';
+import { toast } from 'sonner';
+import { wishLookup } from '@/data/wishes';
+
+const API_BASE_URL = (import.meta.env.VITE_LLM_API_BASE_URL ?? '/llm-api').replace(/\/$/, '');
+
+const normalizeWishes = (wishIds: string[], customWish: string) => {
+  const mapped = wishIds.map((wishId) => wishLookup[wishId]?.english ?? wishId);
+  const custom = customWish
+    .split('|')
+    .map((wish) => wish.trim())
+    .filter(Boolean);
+  return [...mapped, ...custom];
+};
+
+const parseChantOutput = (output: string) => {
+  const cleaned = output.trim();
+  if (!cleaned) {
+    return { pali: '', translation: '' };
+  }
+
+  const extract = (label: string) => {
+    const regex = new RegExp(`${label}\\s*\\{\\{([\\s\\S]*?)\\}\\}`, 'i');
+    const match = cleaned.match(regex);
+    return match ? match[1].trim() : '';
+  };
+
+  const pali = extract('PALI');
+  const translation = extract('TRANSLATION');
+  if (pali || translation) {
+    return { pali, translation };
+  }
+
+  const translationSplit = cleaned.split(/TRANSLATION\s*[:\-]?/i);
+  if (translationSplit.length > 1) {
+    return {
+      pali: translationSplit[0].trim(),
+      translation: translationSplit.slice(1).join('TRANSLATION').trim(),
+    };
+  }
+
+  const thaiSplit = cleaned.split(/คำแปล\s*[:\-]?/);
+  if (thaiSplit.length > 1) {
+    return {
+      pali: thaiSplit[0].trim(),
+      translation: thaiSplit.slice(1).join('คำแปล').trim(),
+    };
+  }
+
+  return { pali: cleaned, translation: '' };
+};
 const Loading: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -9,54 +59,71 @@ const Loading: React.FC = () => {
     setChantResult
   } = useChant();
   useEffect(() => {
+    let isActive = true;
+    const controller = new AbortController();
+
     const generateChant = async () => {
-      // Simulate API call delay (will be replaced with actual LLM call)
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const wishes = normalizeWishes(data.wishes, data.customWish);
+      if (wishes.length === 0) {
+        toast.error('กรุณาเลือกความปรารถนาอย่างน้อย 1 ข้อ');
+        navigate('/wishes');
+        return;
+      }
 
-      // Mock response - this will be replaced with actual LLM response
-      const mockPaliChant = `นะโม ตัสสะ ภะคะวะโต อะระหะโต สัมมาสัมพุทธัสสะ
-      
-สุขี โหตุ ${data.personalInfo.name || 'สาธุชน'}
-อายุ วัณโณ สุขัง พะลัง
-ปัญญาวุฒิ สมาธิ จ
+      const name = data.personalInfo.name.trim() || 'สาธุชน';
+      try {
+        const response = await fetch(`${API_BASE_URL}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            wishes,
+          }),
+          signal: controller.signal,
+        });
 
-${data.wishes.includes('health') ? 'อาโรคยา ปะระมา ลาภา\nโรคา สัพพา วินัสสันตุ\n' : ''}
-${data.wishes.includes('wealth') ? 'ธะนัง มะหาลาโภ โหตุ\nโภคา สัพพา สะมิชฌันตุ\n' : ''}
-${data.wishes.includes('career') ? 'กัมมะวิชชา สิชฌันตุ\nวิริยะ สัมปะทา โหตุ\n' : ''}
-${data.wishes.includes('love') ? 'เมตตา จิตตัง สะมาธิสา\nปิยะ มะนาปา โหตุ\n' : ''}
-${data.wishes.includes('education') ? 'ปัญญา วัฒนัง โหตุ\nวิชชา จะระณะ สัมปันโน\n' : ''}
-${data.wishes.includes('family') ? 'กุลัง สุขิตัง โหตุ\nมาตาปิตา สุขิตา โหนตุ\n' : ''}
-${data.wishes.includes('peace') ? 'สันติ สุขัง โหตุ\nนิพพานะ สุขัง อะนุตตะรัง\n' : ''}
-${data.wishes.includes('success') ? 'สิชฌันตุ เม มะโนรถา\nสัพพะกัมมัง ปะสิชฌันตุ\n' : ''}
-${data.wishes.includes('protection') ? 'อะภะยัง โหตุ สัพพะทา\nเทวะตา อะภิปาเลนตุ\n' : ''}
-${data.wishes.includes('friendship') ? 'มิตตา สุขิตา โหนตุ\nสะหายะ สัมปันโน\n' : ''}
+        if (!response.ok) {
+          let errorMessage = `LLM API error (${response.status})`;
+          try {
+            const errorData = await response.json();
+            if (typeof errorData?.detail === 'string') {
+              errorMessage = errorData.detail;
+            }
+          } catch {
+            // Ignore JSON parsing errors for non-JSON responses.
+          }
+          throw new Error(errorMessage);
+        }
 
-สาธุ สาธุ สาธุ อะนุโมทามิ`;
-      const mockThaiTranslation = `ขอนอบน้อมแด่พระผู้มีพระภาคเจ้า พระอรหันต์ ผู้ตรัสรู้เองโดยชอบ
+        const payload = await response.json();
+        const outputText = typeof payload?.output === 'string' ? payload.output : '';
+        const parsed = parseChantOutput(outputText);
+        const paliChant = parsed.pali || outputText.trim() || 'ไม่พบบทสวดจากระบบ';
+        const thaiTranslation = parsed.translation;
 
-ขอให้ ${data.personalInfo.name || 'ท่าน'} มีความสุข
-ขอให้มีอายุยืน ผิวพรรณงาม มีความสุข มีกำลัง
-ขอให้มีปัญญาเจริญ และมีสมาธิ
-
-${data.wishes.includes('health') ? 'ความไม่มีโรคเป็นลาภอันประเสริฐ\nขอให้โรคทั้งปวงจงพินาศไป\n' : ''}
-${data.wishes.includes('wealth') ? 'ขอให้มีทรัพย์อันยิ่งใหญ่\nขอให้โภคทรัพย์ทั้งปวงจงสำเร็จ\n' : ''}
-${data.wishes.includes('career') ? 'ขอให้สำเร็จในการงาน\nขอให้มีความเพียรอันสมบูรณ์\n' : ''}
-${data.wishes.includes('love') ? 'ขอให้จิตใจเปี่ยมด้วยเมตตา\nขอให้เป็นที่รักและน่าพอใจ\n' : ''}
-${data.wishes.includes('education') ? 'ขอให้ปัญญาเจริญงอกงาม\nขอให้สมบูรณ์ด้วยวิชาและความประพฤติ\n' : ''}
-${data.wishes.includes('family') ? 'ขอให้ครอบครัวมีความสุข\nขอให้บิดามารดามีความสุข\n' : ''}
-${data.wishes.includes('peace') ? 'ขอให้มีความสงบสุข\nความสุขแห่งนิพพานเป็นสุขอันยอดเยี่ยม\n' : ''}
-${data.wishes.includes('success') ? 'ขอให้ความปรารถนาทั้งหลายสำเร็จ\nขอให้การงานทั้งปวงสำเร็จลุล่วง\n' : ''}
-${data.wishes.includes('protection') ? 'ขอให้ปราศจากภัยตลอดกาล\nขอให้เทวดาคุ้มครองรักษา\n' : ''}
-${data.wishes.includes('friendship') ? 'ขอให้มิตรสหายมีความสุข\nขอให้สมบูรณ์ด้วยเพื่อนที่ดี\n' : ''}
-
-${data.customWish ? `\n(ความปรารถนาพิเศษ: ${data.customWish})\n` : ''}
-
-สาธุ สาธุ สาธุ ข้าพเจ้าขออนุโมทนา`;
-      setChantResult(mockPaliChant, mockThaiTranslation);
-      navigate('/result');
+        if (!isActive) return;
+        setChantResult(paliChant, thaiTranslation);
+        navigate('/result');
+      } catch (error) {
+        if (!isActive) return;
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างบทสวด';
+        toast.error(message);
+        navigate('/wishes');
+      }
     };
+
     generateChant();
-  }, [data, navigate, setChantResult]);
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [data.customWish, data.personalInfo.name, data.wishes, navigate, setChantResult]);
   return <div className="min-h-screen bg-gradient-temple flex flex-col items-center justify-center px-4 bg-secondary">
       {/* Animated lotus */}
       <div className="relative mb-8">

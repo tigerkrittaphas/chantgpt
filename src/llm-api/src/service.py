@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
@@ -53,6 +54,26 @@ class GenerateResponse(BaseModel):
 
 app = FastAPI(title="Chant LLM Generator")
 
+
+def _cors_allow_origins() -> list[str]:
+    raw = os.getenv("CORS_ALLOW_ORIGINS", "")
+    if raw:
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_allow_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @lru_cache

@@ -17,6 +17,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "uvicorn>=0.34.0",
     "vertexai>=1.43.0",
+    "pulumi>=3.213.0",
 ]
 
 [tool.uv.workspace]
