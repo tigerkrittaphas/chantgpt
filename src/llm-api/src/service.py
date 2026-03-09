@@ -2,15 +2,18 @@ import logging
 import os
 from functools import lru_cache
 from pathlib import Path
+from typing import List, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
+from .lookup import character_similarity
 from .prompts import SYSTEM_PROMPT, build_user_prompt
+from .semantic import semantic_definition_search
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -37,7 +40,7 @@ def _load_environment() -> None:
 
 _load_environment()
 
-DEFAULT_MODEL = "gemini-3-flash-preview"
+DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 
 class GenerateRequest(BaseModel):
@@ -50,6 +53,18 @@ class GenerateRequest(BaseModel):
 class GenerateResponse(BaseModel):
     model: str
     output: str
+
+
+class SearchResult(BaseModel):
+    pali_thai: str
+    pali_roman: str
+    definition: Optional[str] = None
+    score: float
+
+
+class SearchResponse(BaseModel):
+    query: str
+    results: List[SearchResult]
 
 
 app = FastAPI(title="Chant LLM Generator")
@@ -122,3 +137,39 @@ def generate(request: GenerateRequest) -> GenerateResponse:
         logger.exception("LLM generation failed")
         raise HTTPException(status_code=500, detail="LLM generation failed") from exc
     return GenerateResponse(model=request.model, output=output)
+
+
+@app.get("/search", response_model=SearchResponse)
+def search(
+    q: str = Query(..., description="Thai word to search for"),
+    limit: int = Query(5, ge=1, le=50, description="Number of results to return"),
+    score_cutoff: int = Query(0, ge=0, le=100, description="Minimum similarity score"),
+) -> SearchResponse:
+    """
+    Fuzzy search Pali entries by Thai spelling.
+    """
+    query = q.strip()
+    matches = character_similarity(query, limit=limit, score_cutoff=score_cutoff) if query else []
+    return SearchResponse(query=query, results=matches)
+
+
+@app.get("/search/semantic", response_model=SearchResponse)
+def semantic_search(
+    q: str = Query(..., description="Free-text meaning to search definitions by"),
+    limit: int = Query(5, ge=1, le=50, description="Number of results to return"),
+    project: Optional[str] = Query(None, description="Vertex AI project ID (falls back to env)"),
+    location: Optional[str] = Query(None, description="Vertex AI region (falls back to env or us-central1)"),
+) -> SearchResponse:
+    """
+    Semantic search against Pali definitions using Vertex AI embeddings + FAISS.
+    """
+    query = q.strip()
+    if not query:
+        return SearchResponse(query=query, results=[])
+    logger.info("Semantic search requested query=%r limit=%d project=%s location=%s", query, limit, project, location)
+    try:
+        matches = semantic_definition_search(query=query, k=limit, project=project, location=location)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    logger.info("Semantic search completed query=%r returned=%d", query, len(matches))
+    return SearchResponse(query=query, results=matches)

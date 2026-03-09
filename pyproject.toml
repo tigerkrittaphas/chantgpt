@@ -19,8 +19,3 @@ dependencies = [
     "vertexai>=1.43.0",
     "pulumi>=3.213.0",
 ]
-
-[tool.uv.workspace]
-members = [
-    "src/pali",
-]

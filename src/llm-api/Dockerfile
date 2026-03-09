@@ -11,11 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
 RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml ./
-# RUN uv pip install --system --no-cache .
-RUN uv pip install --system --no-cache .[dev]
+COPY src/llm-api/pyproject.toml ./pyproject.toml
+RUN uv pip install --system --no-cache .
 
-COPY . ./
+COPY src/llm-api/src ./src
+COPY src/llm-api/data/processed ./data/processed
 
 EXPOSE 8080
 CMD ["uvicorn", "src.service:app", "--host", "0.0.0.0", "--port", "8080"]

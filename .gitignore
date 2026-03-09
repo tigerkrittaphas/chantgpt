@@ -1,3 +1,4 @@
 .venv
 .env
 secrets
+*.DS_Store

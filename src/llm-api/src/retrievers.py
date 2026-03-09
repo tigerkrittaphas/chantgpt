@@ -1,12 +1,14 @@
 import logging
 import os
 
-import requests
-from google.cloud import translate
 from dotenv import load_dotenv
+from google.cloud import translate
+
+from .lookup import character_similarity
+from .semantic import semantic_definition_search
+
 load_dotenv()
 
-PALI_API_URL = os.getenv("PALI_API_URL", "http://localhost:8081").rstrip("/")
 THAI_BLOCK_START = "\u0e00"
 THAI_BLOCK_END = "\u0e7f"
 
@@ -17,15 +19,10 @@ if not logger.handlers:
     logging.basicConfig(level=logging.INFO)
 
 
-def fetch_words_simiarlity(word: str, top_k: int = 5) -> list[str]:
-    url = f"{PALI_API_URL}/search"
-    params = {"q": word, "top_k": top_k}
+def fetch_words_simiarlity(word: str, top_k: int = 5) -> list[dict[str, object]]:
     try:
-        response = requests.get(url, params=params, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("results", [])
-    except requests.RequestException as exc:
+        return character_similarity(word, limit=top_k)
+    except Exception as exc:
         logger.warning("Pali similarity lookup failed for %s: %s", word, exc)
         return []
 
@@ -69,19 +66,14 @@ def _translate_thai_to_english(text: str) -> str:
         return text
 
 
-def fetch_words_semantics(word: str, top_k: int = 5) -> list[str]:
+def fetch_words_semantics(word: str, top_k: int = 5) -> list[dict[str, object]]:
     """
     Semantic search only work in English, so translate Thai to English first.
     """
     query = _translate_thai_to_english(word) if _looks_thai(word) else word
-    url = f"{PALI_API_URL}/search/semantic"
-    params = {"q": query, "top_k": top_k}
     try:
-        response = requests.get(url, params=params, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("results", [])
-    except requests.RequestException as exc:
+        return semantic_definition_search(query, k=top_k)
+    except Exception as exc:
         logger.warning("Pali semantic lookup failed for %s: %s", word, exc)
         return []
 
