@@ -1,0 +1,4 @@
+encryptionsalt: v1:gtom0k4HDzQ=:v1:EIswNO89FVzKlWYo:MIxuctxjbPIg4xAZCs3Y8TRwkHd4wg==
+config:
+  gcp:project: chantgpt-480017
+  gcp:region: us-central1

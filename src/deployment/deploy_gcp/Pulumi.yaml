@@ -1,0 +1,10 @@
+name: deploy-gcp
+description: Deploy Cloud Run services and a static frontend bucket for ChantGPT.
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: python

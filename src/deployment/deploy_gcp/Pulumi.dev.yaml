@@ -1,0 +1,11 @@
+encryptionsalt: v1:R31MdOUAysU=:v1:Ym2onXWmtrY+R7/D:VnUuiBi+PaKi3YPb4vFXq7XZWr00Xw==
+config:
+  gcp:project: chantgpt-480017
+  gcp:region: us-central1
+  deploy-gcp:llm_service_account_email:
+    secure: v1:8+RiUMaHT/SMNff9:EEC1n7blh/pK8uW4SpPdKhts5VeHBkaNehptzdos8mcb+crSgIVsxCB89PUvXfn9vW21/468KRIDhdlxyvyFxsGbIf+ZHg==
+  deploy-gcp:manage_runtime_iam: "false"
+  deploy-gcp:llm_memory: 2Gi
+  deploy-gcp:llm_concurrency: "5"
+  gemini_model: gemini-3-flash-preview
+  google_location: global
