@@ -124,23 +124,21 @@ const Loading: React.FC = () => {
       controller.abort();
     };
   }, [data.customWish, data.personalInfo.name, data.wishes, navigate, setChantResult]);
-  return <div className="min-h-screen bg-gradient-temple flex flex-col items-center justify-center px-4 bg-secondary">
+  return <div className="min-h-screen bg-gradient-sky flex flex-col items-center justify-center px-4">
       {/* Animated lotus */}
       <div className="relative mb-8">
-        <div className="animate-spin-slow">
-          <LotusIcon size={120} className="opacity-90" />
-        </div>
-        <div className="absolute inset-0 animate-pulse">
-          <LotusIcon size={120} className="opacity-40" />
+        <LotusIcon size={120} animateUpwardBlink className="opacity-90 animate-glow" />
+        <div className="absolute inset-0">
+          <LotusIcon size={120} animateUpwardBlink className="opacity-35 blur-[1px]" />
         </div>
       </div>
 
       {/* Loading text */}
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-secondary-foreground mb-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
           กำลังสร้างบทสวดมนต์
         </h2>
-        <p className="text-secondary-foreground/80 mb-8">
+        <p className="text-muted-foreground mb-8">
           Generating your personalized chant...
         </p>
 
@@ -159,10 +157,10 @@ const Loading: React.FC = () => {
 
         {/* Inspirational quote */}
         <div className="mt-12 max-w-md mx-auto">
-          <p className="text-secondary-foreground/60 italic text-sm">
+          <p className="text-foreground/85 italic text-sm">
             "ธรรมะย่อมรักษาผู้ประพฤติธรรม"
           </p>
-          <p className="text-secondary-foreground/40 text-xs mt-1">
+          <p className="text-muted-foreground text-xs mt-1">
             "Dhamma protects those who practice Dhamma"
           </p>
         </div>

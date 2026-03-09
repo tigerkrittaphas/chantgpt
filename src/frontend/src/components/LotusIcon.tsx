@@ -3,79 +3,33 @@ import React from 'react';
 interface LotusIconProps {
   className?: string;
   size?: number;
+  animateUpwardBlink?: boolean;
 }
 
-const LotusIcon: React.FC<LotusIconProps> = ({ className = '', size = 48 }) => {
+const LotusIcon: React.FC<LotusIconProps> = ({
+  className = '',
+  size = 48,
+  animateUpwardBlink = false,
+}) => {
+  const rootClassName = `text-primary ${animateUpwardBlink ? 'chant-icon-upward-blink' : ''} ${className}`.trim();
+
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 100 100"
-      fill="none"
+      viewBox="0 0 1133.35 1104.06"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={rootClassName}
+      role="img"
+      aria-label="ChantGPT icon"
     >
-      {/* Center petal */}
-      <ellipse
-        cx="50"
-        cy="45"
-        rx="12"
-        ry="30"
-        className="fill-primary"
+      <ellipse className="chant-icon-part chant-icon-part-1 fill-current" cx="566.68" cy="187.33" rx="185.69" ry="187.33" />
+      <path
+        className="chant-icon-part chant-icon-part-2 fill-current"
+        d="M869.19,591.96H264.16l41.99-95.43c0-12.41,36.7-22.48,81.97-22.48h357.12c45.27,0,81.97,10.06,81.97,22.48l41.99,95.43Z"
       />
-      
-      {/* Left petals */}
-      <ellipse
-        cx="35"
-        cy="50"
-        rx="10"
-        ry="25"
-        transform="rotate(-25 35 50)"
-        className="fill-primary/80"
-      />
-      <ellipse
-        cx="22"
-        cy="55"
-        rx="8"
-        ry="20"
-        transform="rotate(-45 22 55)"
-        className="fill-primary/60"
-      />
-      
-      {/* Right petals */}
-      <ellipse
-        cx="65"
-        cy="50"
-        rx="10"
-        ry="25"
-        transform="rotate(25 65 50)"
-        className="fill-primary/80"
-      />
-      <ellipse
-        cx="78"
-        cy="55"
-        rx="8"
-        ry="20"
-        transform="rotate(45 78 55)"
-        className="fill-primary/60"
-      />
-      
-      {/* Base */}
-      <ellipse
-        cx="50"
-        cy="75"
-        rx="25"
-        ry="8"
-        className="fill-secondary"
-      />
-      
-      {/* Inner glow */}
-      <circle
-        cx="50"
-        cy="50"
-        r="8"
-        className="fill-gold-light"
-      />
+      <polygon className="chant-icon-part chant-icon-part-3 fill-current" points="1002.49 846.41 130.86 846.41 207.77 691.35 925.59 691.35 1002.49 846.41" />
+      <polygon className="chant-icon-part chant-icon-part-4 fill-current" points="1133.35 1104.06 0 1104.06 90.43 945.8 1042.92 945.8 1133.35 1104.06" />
     </svg>
   );
 };

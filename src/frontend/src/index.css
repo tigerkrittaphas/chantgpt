@@ -1,8 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'FC Maha Nakhon';
+  src: url('/fc-mahanakorn.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 
 @layer base {
   :root {
@@ -141,7 +147,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+    font-family: 'FC Maha Nakhon', 'Noto Sans Thai', 'Sarabun', sans-serif;
   }
 }
 
@@ -224,5 +230,39 @@
 
   .animate-spin-slow {
     animation: spin-slow 20s linear infinite;
+  }
+
+  .chant-icon-upward-blink .chant-icon-part {
+    animation: chant-upward-blink 1.6s ease-in-out infinite;
+    opacity: 0.35;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .chant-icon-upward-blink .chant-icon-part-4 {
+    animation-delay: 0s;
+  }
+
+  .chant-icon-upward-blink .chant-icon-part-3 {
+    animation-delay: 0.12s;
+  }
+
+  .chant-icon-upward-blink .chant-icon-part-2 {
+    animation-delay: 0.24s;
+  }
+
+  .chant-icon-upward-blink .chant-icon-part-1 {
+    animation-delay: 0.36s;
+  }
+
+  @keyframes chant-upward-blink {
+    0%, 20%, 100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    10% {
+      opacity: 1;
+      transform: translateY(-18px);
+    }
   }
 }

@@ -12,28 +12,6 @@ const Landing: React.FC = () => {
         <ThemeToggle />
       </div>
 
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 opacity-20 animate-float">
-          <LotusIcon size={80} />
-        </div>
-        <div className="absolute top-20 right-20 opacity-15 animate-float" style={{
-        animationDelay: '1s'
-      }}>
-          <LotusIcon size={60} />
-        </div>
-        <div className="absolute bottom-20 left-20 opacity-10 animate-float" style={{
-        animationDelay: '2s'
-      }}>
-          <LotusIcon size={100} />
-        </div>
-        <div className="absolute bottom-10 right-10 opacity-20 animate-float" style={{
-        animationDelay: '0.5s'
-      }}>
-          <LotusIcon size={70} />
-        </div>
-      </div>
-
       {/* Main content */}
       <div className="text-center z-10 max-w-2xl mx-auto">
         {/* Main lotus icon */}
@@ -49,7 +27,7 @@ const Landing: React.FC = () => {
         <p className="text-muted-foreground text-base md:text-lg mb-12 max-w-lg mx-auto leading-relaxed">
           สร้างบทสวดมนต์ที่ออกแบบมาเฉพาะสำหรับคุณ
           <br />
-          <span className="text-sm">Create personalized prayer tailored to your wishes</span>
+          <span className="text-sm text-muted-foreground/90">Create personalized prayer tailored to your wishes</span>
         </p>
 
         {/* CTA Button */}
